@@ -40,6 +40,7 @@ if (title[0] && data_url['Title'] !== title[0]){
 }
 
     console.log('drawGraph');
+
 //This iterates over the data_url to input the Episode Rating Data as points into the graph.
 var each = function(input, callback){
   if(input.constructor === Object){
@@ -52,13 +53,18 @@ var each = function(input, callback){
     }
   }
 };
+
 each(data_url, function(element, key){
-  if(key === "Title"){
-    title.push(data_url[key]);
-  }
+  each(element, function(item, key){
+    if(key === "Title"){
+        title.push(element[key]);
+      }
+  });
 });
 //Function for filling up the info dataset
-each(data_url, function(element, key){
+
+each(data_url, function(item, index){
+    each(item, function(element, key){
   if(key === "Episodes"){
     var episodes = data_url["Episodes"];
     each(episodes, function(element, key){
@@ -79,6 +85,8 @@ each(data_url, function(element, key){
   });  
   }
 });
+});
+
 
 //Function for filling up the episode dataset
 each(data_url, function(element, key){
@@ -107,6 +115,35 @@ each(data_url, function(element, key){
   }
 });
 
+var x1 = 0;
+var y1 = 0;
+var x2 = 0;
+var y2 = 0;
+var len = episodedataset.length;
+each(episodedataset, function(item, index){
+  x1 += item[0];
+});
+each(episodedataset, function(item, index){
+  y1 += item[1];
+});
+each(episodedataset, function(item, index){
+  x2 += (item[0] * item[1]);
+});
+each(episodedataset, function(item, index){
+  y2 += (item[0] * item[0]);
+});
+var slope = (((len*x2) - (x1*y1))/((len*y2)-(x1*x1)))
+var intercept = ((y1 -(slope*x1))/len)
+
+var xLabels = episodedataset.map(function (d) { return d[0]; });
+var xSeries = d3.range(1, xLabels.length + 1);
+var ySeries = episodedataset.map(function(d) { return d[1]; });
+var a1 = xLabels[0];
+var b1 = slope + intercept;
+var a2 = xLabels[xLabels.length - 1];
+var b2 = slope * xSeries.length + intercept;
+var trendData = [[a1,b1,a2,b2]];
+console.log(slope);
 //This reveals data when you mouse over nodes.
 var tip = d3.tip()
   .attr('class', 'd3-tip')
@@ -227,9 +264,6 @@ points.attr('cy', 0)
                 }
         })
         .style('opacity', 1);
-
-
-//graph title
 d3.select('#graph svg')
   .append("text")
   .attr("x", w/2)             
@@ -238,14 +272,124 @@ d3.select('#graph svg')
   .style("fill", "#2FFF4D")
   .text(title[0]);
 
-//Text Style and Location On Hover
 
+function trendLine(){
+  var trendLine = svg.select()
+  var trendline = svg.selectAll(".trendline")
+      .data(trendData);
+      
+    trendline.enter()
+      .append("line")
+      .attr("class", "trendline")
+      .attr("x1", function(d) { return xScale(d[0]); })
+      .attr("y1", function(d) { return yScale(d[1]); })
+      .attr("x2", function(d) { return xScale(d[2]); })
+      .attr("y2", function(d) { return yScale(d[3]); })
+      .style("stroke", "rgb(47,255,77)")  
+}
+ 
 
 svg.selectAll('circle').data(infoset).on('mouseover', tip.show).on('mouseout', tip.hide)
-
+function shouldI (){
+  var avg = y1 / len;
+  if (avg >= 7){
+    if(slope > .05){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("YES!");
+    }
+    else if(slope < 0 && slope > -0.03){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("Sure");
+    }
+    else if(slope < 0 && slope > -0.04){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("Meh.");
+    }
+    else {
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("Eeeeh...");
+    }
+  }
+  else {
+    if(slope > .05){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("Go For It!");
+    }
+  else if(slope > 0.03){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("Yup");
+    }
+  else if(slope > 0){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("Eeeeh...");
+    }
+  else if(slope < 0 && slope > -0.04){
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("No.");
+    }
+  else {
+    d3.select('#graph svg')
+    .append("text")
+    .attr("x", w/2)             
+    .attr("y", 350)
+    .attr("text-anchor", "middle") 
+    .style("fill", "#2FFF4D")
+    .attr("font-size", "34px")
+    .text("HAHAHA...Oh You were Serious...");
+    }
+  }
 };
 
-
-
-
+var interval = (len * 100) + 1400 
+setTimeout(trendLine, interval);
+setTimeout(shouldI, interval+1000);
+};
 
